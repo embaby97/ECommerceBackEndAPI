@@ -37,50 +37,61 @@ namespace ServiceLayer.SERVICES.Repositories.Services
 
         public async Task<ResponseDto> RegisterAsync(RegisterDto register)
         {
-            if (await _userManager.FindByNameAsync(register.UserName) != null)
+            try
             {
+                if (await _userManager.FindByNameAsync(register.UserName) != null)
+                {
+                    return new ResponseDto
+                    {
+                        Message = "This user already exists!",
+                        IsSucceeded = false,
+                        StatusCode = 400
+                    };
+                }
+
+                var user = _mapper.Map<User>(register);
+
+                var result = await _userManager.CreateAsync(user, register.Password);
+
+                if (!result.Succeeded)
+                {
+                    var errors = string.Empty;
+                    foreach (var error in result.Errors)
+                    {
+                        errors += $"{error.Description}, \n";
+                    }
+                    return new ResponseDto
+                    {
+                        Message = errors,
+                        IsSucceeded = false,
+                        StatusCode = 400
+                    };
+                }
+
+                await _userManager.AddToRoleAsync(user, "Customer");
+                var JwtToken = await CreateToken(user);
                 return new ResponseDto
                 {
-                    Message = "This user already exists!",
-                    IsSucceeded = false,
-                    StatusCode = 400
+                    Message = "Account createdSuccessfully.",
+                    IsSucceeded = true,
+                    StatusCode = 200,
+                    Model = new
+                    {
+                        IsAuthenticated = true,
+                        Token = new JwtSecurityTokenHandler().WriteToken(JwtToken),
+                        UserName = user.UserName,
+                    }
                 };
             }
-
-            var user = _mapper.Map<User>(register);
-
-            var result = await _userManager.CreateAsync(user, register.Password);
-
-            if (!result.Succeeded)     
-            {
-                var errors = string.Empty;
-                foreach (var error in result.Errors)
-                {
-                    errors += $"{error.Description}, \n";
-                }
+            catch (Exception ex) {
                 return new ResponseDto
                 {
-                    Message = errors,
-                    IsSucceeded = false,
-                    StatusCode = 400
+                    Message = ex.Message,
+                    IsSucceeded = true,
+                    StatusCode = 500,
+                    Model =null
                 };
             }
-
-            await _userManager.AddToRoleAsync(user, "Customer");
-            var JwtToken =await CreateToken(user);
-            return new ResponseDto
-            {
-                Message = "Account createdSuccessfully.",
-                IsSucceeded = true,
-                StatusCode = 200,
-                Model = new
-                {
-                    IsAuthenticated = true,
-                    Token = new JwtSecurityTokenHandler().WriteToken(JwtToken),
-                    UserName = user.UserName,
-                }
-            };
-
         }
 
         public async Task<ResponseDto> LoginAsync(LoginDto dto)

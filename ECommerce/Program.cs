@@ -48,10 +48,14 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // Register other required services
 builder.Services.AddHttpContextAccessor();
 //builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+//var builder = WebApplication.CreateBuilder(args);
+
+// Add AutoMapper
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddAutoMapper(typeof(MappingProfile).Assembly);
+//builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 var app = builder.Build();
 

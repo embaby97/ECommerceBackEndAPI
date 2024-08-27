@@ -38,7 +38,7 @@ namespace ECommerce.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        public async Task<IActionResult> Login(LoginDto dto)
         {
             if (ModelState.IsValid)
             {
