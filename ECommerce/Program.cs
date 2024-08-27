@@ -36,11 +36,29 @@ builder.Services.AddAuthentication(options =>
 // Register ApplicationContext with the connection string from appsettings.json
 builder.Services.AddDbContext<ApplicationContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddIdentity<User, IdentityRole>(options =>
+{
+    // User validation settings
+    options.User.RequireUniqueEmail = true;
 
-// Add Identity services
-builder.Services.AddIdentity<User, IdentityRole>()
+    // Password validation settings
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = false;
+
+    // Lockout settings
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.AllowedForNewUsers = true;
+
+    // Sign-in settings
+    options.SignIn.RequireConfirmedEmail = true;
+})
     .AddEntityFrameworkStores<ApplicationContext>()
     .AddDefaultTokenProviders();
+
 
 // Register UnitOfWork
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
